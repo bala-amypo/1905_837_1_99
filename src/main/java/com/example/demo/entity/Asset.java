@@ -1,70 +1,44 @@
 package com.example.demo.entity;
-
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Entity
-@Table(name = "assets", uniqueConstraints = @UniqueConstraint(columnNames = "asset_tag"))
+@Table(name = "assets")
 public class Asset {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "asset_tag", nullable = false, unique = true)
-    private String assetTag;
-
-    @Column(nullable = false)
+    @Column(unique = true) private String assetTag;
     private String assetName;
-
+    
     @ManyToOne
-    @JoinColumn(name = "vendor_id", nullable = false)
+    @JoinColumn(name = "vendor_id")
     private Vendor vendor;
 
-    @Column(name = "purchase_date", nullable = false)
-    private LocalDate purchaseDate;
-
-    @Column(name = "purchase_cost", nullable = false)
-    private Double purchaseCost;
-
     @ManyToOne
-    @JoinColumn(name = "rule_id", nullable = false)
+    @JoinColumn(name = "rule_id")
     private DepreciationRule depreciationRule;
 
-    @Column(nullable = false)
-    private String status;
+    private LocalDate purchaseDate;
+    private Double purchaseCost;
+    private String status; // ACTIVE, DISPOSED
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @OneToMany(mappedBy = "asset")
-    private List<AssetLifecycleEvent> lifecycleEvents;
-
-    @OneToOne(mappedBy = "asset")
-    private AssetDisposal assetDisposal;
-
-    public Asset() {
-        this.status = "ACTIVE";
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public Asset(String assetTag, String assetName, Vendor vendor, LocalDate purchaseDate, Double purchaseCost, DepreciationRule depreciationRule) {
-        this.assetTag = assetTag;
-        this.assetName = assetName;
-        this.vendor = vendor;
-        this.purchaseDate = purchaseDate;
-        this.purchaseCost = purchaseCost;
-        this.depreciationRule = depreciationRule;
-        this.status = "ACTIVE";
-        this.createdAt = LocalDateTime.now();
-    }
-
+    // Getters/Setters
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     public String getAssetTag() { return assetTag; }
+    public void setAssetTag(String assetTag) { this.assetTag = assetTag; }
     public String getAssetName() { return assetName; }
+    public void setAssetName(String assetName) { this.assetName = assetName; }
+    public Vendor getVendor() { return vendor; }
+    public void setVendor(Vendor vendor) { this.vendor = vendor; }
+    public DepreciationRule getDepreciationRule() { return depreciationRule; }
+    public void setDepreciationRule(DepreciationRule depreciationRule) { this.depreciationRule = depreciationRule; }
+    public LocalDate getPurchaseDate() { return purchaseDate; }
+    public void setPurchaseDate(LocalDate purchaseDate) { this.purchaseDate = purchaseDate; }
+    public Double getPurchaseCost() { return purchaseCost; }
+    public void setPurchaseCost(Double purchaseCost) { this.purchaseCost = purchaseCost; }
     public String getStatus() { return status; }
-
     public void setStatus(String status) { this.status = status; }
 }
