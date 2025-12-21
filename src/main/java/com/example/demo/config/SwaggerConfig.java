@@ -11,9 +11,9 @@ public class SwaggerConfig {
     @Bean
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
-            .info(new Info()
-                    .title("Asset Lifecycle Tracking API")
-                    .version("1.0")
-                    .description("Demo of CRUD operations and exception handling"));
+                .info(new Info()
+                        .title("Asset Lifecycle Tracking API")
+                        .version("1.0")
+                        .description("Demo of CRUD operations and exception handling"));
     }
 }
