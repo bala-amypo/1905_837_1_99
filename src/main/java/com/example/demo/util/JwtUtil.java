@@ -9,13 +9,13 @@ import java.util.*;
 
 @Component
 public class JwtUtil {
-    // Use a strong secret key (HS256 requires >= 256 bits)
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
     private final long expirationMs = 3600000; // 1 hour
 
     public String generateToken(String email, Long userId, Set<String> roles) {
         return Jwts.builder()
                 .setSubject(email)
+                .claim("email", email) // <--- ADDED THIS LINE
                 .claim("userId", userId)
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
