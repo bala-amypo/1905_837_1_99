@@ -7,7 +7,6 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 import java.util.Optional;
 
@@ -29,32 +28,37 @@ public class UserServiceImpl implements UserService {
         if (email == null || email.trim().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
         }
+        
+        // 1. Check if user exists
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
 
+        // 2. Prepare User Object
         User user = new User();
         user.setName(userData.get("name"));
         user.setEmail(email);
         user.setPassword(encoder.encode(userData.get("password")));
         
-        // Fix: Fetch role safely. If not found, try to save it in a separate try-block
-        // to avoid marking the main transaction as rollback-only if a race condition occurs.
+        // 3. Handle Role (The Critical Part)
+        // We do NOT assume we can save. We try to find. 
         Role userRole = roleRepository.findByName("USER").orElse(null);
         
         if (userRole == null) {
+            // If strictly not found, try to save a new one.
             try {
                 userRole = roleRepository.save(new Role("USER"));
             } catch (Exception e) {
-                // If save fails, it means another thread/test created it just now. Fetch it.
+                // If this fails, it means another thread created it 1ms ago.
+                // So we fetch it again.
                 userRole = roleRepository.findByName("USER")
-                        .orElseThrow(() -> new RuntimeException("Error handling USER role"));
+                        .orElseThrow(() -> new RuntimeException("Role USER creation failed"));
             }
         }
         
         user.getRoles().add(userRole);
         
-        // Save the user
+        // 4. Save User
         return userRepository.save(user);
     }
 }

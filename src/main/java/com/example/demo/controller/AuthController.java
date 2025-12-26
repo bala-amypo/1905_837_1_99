@@ -33,20 +33,18 @@ public class AuthController {
         try {
             User user = userService.registerUser(body);
 
-            // Construct safe response
+            // Create Safe Response
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
             response.put("name", user.getName());
-            response.put("status", "success");
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            // Log for debugging
-            System.out.println("REGISTRATION FAILED: " + e.getMessage());
-            Map<String, Object> errorResp = new HashMap<>();
-            errorResp.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResp);
+            e.printStackTrace(); // Print error to console
+            Map<String, Object> err = new HashMap<>();
+            err.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(err);
         }
     }
 
