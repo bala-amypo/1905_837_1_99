@@ -29,26 +29,18 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
+    public ResponseEntity<String> register(@RequestBody Map<String, String> body) {
         try {
-            // 1. Call Service
             User user = userService.registerUser(body);
-
-            // 2. FIX: Build a simple Map response. 
-            // Do NOT return 'user' entity directly. It causes the 500 Error.
-            Map<String, Object> response = new LinkedHashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("name", user.getName());
-            response.put("status", "success");
             
-            return ResponseEntity.ok(response);
-
+            // MANUAL JSON CONSTRUCTION (No Jackson crashes possible)
+            String jsonResponse = String.format("{\"id\":%d, \"email\":\"%s\", \"message\":\"Success\"}", 
+                    user.getId(), user.getEmail());
+            
+            return ResponseEntity.ok(jsonResponse);
         } catch (Exception e) {
-            // 3. Log Error for Debugging
-            System.err.println("REGISTER ERROR: " + e.getMessage());
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+            e.printStackTrace(); // Print error to server logs
+            return ResponseEntity.badRequest().body("{\"error\": \"" + e.getMessage() + "\"}");
         }
     }
 
@@ -66,8 +58,8 @@ public class AuthController {
             
             return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
         } catch (Exception e) {
-             System.err.println("LOGIN ERROR: " + e.getMessage());
-             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
+            e.printStackTrace();
+            return ResponseEntity.status(401).body("{\"error\": \"Invalid credentials\"}");
         }
     }
 }

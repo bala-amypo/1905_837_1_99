@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -26,8 +27,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User registerUser(Map<String, String> userData) {
         String email = userData.get("email");
-        if (email == null || email.isEmpty()) throw new IllegalArgumentException("Email required");
-        
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
@@ -37,13 +39,25 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPassword(encoder.encode(userData.get("password")));
         
-        // Ensure USER role exists
-        Role userRole = roleRepository.findByName("USER")
-                .orElseGet(() -> roleRepository.saveAndFlush(new Role("USER")));
+        // --- ROBUST ROLE HANDLING ---
+        // 1. Try to find the role
+        Optional<Role> roleOpt = roleRepository.findByName("USER");
+        Role userRole;
+        
+        if (roleOpt.isPresent()) {
+            userRole = roleOpt.get();
+        } else {
+            // 2. If not found, try to save. If save fails (race condition), try find again.
+            try {
+                userRole = roleRepository.saveAndFlush(new Role("USER"));
+            } catch (Exception e) {
+                // If it crashed, it means the role was created ms ago by another thread/test
+                userRole = roleRepository.findByName("USER")
+                        .orElseThrow(() -> new RuntimeException("Role USER could not be created or found"));
+            }
+        }
         
         user.getRoles().add(userRole);
-        
-        // Use saveAndFlush to catch DB errors immediately
         return userRepository.saveAndFlush(user);
     }
 }
