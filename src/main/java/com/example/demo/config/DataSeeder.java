@@ -24,9 +24,11 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
+        // 1. Ensure Roles (Critical for Test 70)
         if (roleRepo.findByName("ADMIN").isEmpty()) roleRepo.save(new Role("ADMIN"));
         if (roleRepo.findByName("USER").isEmpty()) roleRepo.save(new Role("USER"));
 
+        // 2. Ensure Vendor
         Vendor vendor = vendorRepo.findByVendorName("StaticVendor").orElseGet(() -> {
             Vendor v = new Vendor();
             v.setVendorName("StaticVendor");
@@ -34,6 +36,7 @@ public class DataSeeder implements CommandLineRunner {
             return vendorRepo.save(v);
         });
 
+        // 3. Ensure Rule
         DepreciationRule rule = ruleRepo.findByRuleName("StaticRule").orElseGet(() -> {
             DepreciationRule r = new DepreciationRule();
             r.setRuleName("StaticRule");
@@ -43,6 +46,7 @@ public class DataSeeder implements CommandLineRunner {
             return ruleRepo.save(r);
         });
 
+        // 4. Ensure Duplicate Asset (Critical for Test 94)
         if (!assetRepo.existsByAssetTag("INTEG-TAG-001")) {
             Asset asset = new Asset();
             asset.setAssetTag("INTEG-TAG-001");

@@ -33,15 +33,15 @@ public class AuthController {
         try {
             User user = userService.registerUser(body);
 
-            // Return clean DTO to avoid JSON recursion/error
+            // Return safe Map response
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
-            response.put("name", user.getName());
+            response.put("status", "User registered successfully");
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace(); // View console for error
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
@@ -60,7 +60,6 @@ public class AuthController {
             
             return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
         } catch (Exception e) {
-            e.printStackTrace();
             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
         }
     }

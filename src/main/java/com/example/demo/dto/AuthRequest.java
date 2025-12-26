@@ -4,7 +4,7 @@ public class AuthRequest {
     private String email;
     private String password;
 
-    // Default Constructor (Critical for Jackson)
+    // Default constructor is required for Jackson deserialization
     public AuthRequest() {}
 
     public AuthRequest(String email, String password) {
