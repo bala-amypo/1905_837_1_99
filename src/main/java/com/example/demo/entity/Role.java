@@ -7,13 +7,16 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "roles")
+
+// 🔥 THIS IS THE KEY FIX
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "dtype")
 public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 🔥 VERY IMPORTANT
     @NaturalId
     @Column(unique = true, nullable = false)
     private String name;
@@ -36,8 +39,7 @@ public class Role {
         this.name = name;
     }
 
-    // 🔥 REQUIRED FOR MANY-TO-MANY STABILITY
-    // Prevents detached entity + duplicate role issues
+    // 🔒 Required for Set<Role>
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
