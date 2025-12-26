@@ -47,7 +47,9 @@ public class User {
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
 
-    // CRITICAL: Prevent Infinite Recursion Crash
+    // --- SAFETY FIXES ---
+
+    // Prevent Infinite Loop in HashSets
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -59,5 +61,14 @@ public class User {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    // CRITICAL: Prevent Infinite Loop in Logs/Console
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", email='" + email + '\'' +
+                '}'; // Do NOT include 'roles' here
     }
 }

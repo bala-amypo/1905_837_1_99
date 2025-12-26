@@ -21,7 +21,8 @@ public class Role {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    // CRITICAL FIX: Equals and HashCode based ONLY on ID
+    // --- SAFETY FIXES ---
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -33,5 +34,13 @@ public class Role {
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    @Override
+    public String toString() {
+        return "Role{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                '}';
     }
 }
