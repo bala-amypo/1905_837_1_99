@@ -1,24 +1,23 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import java.time.LocalDateTime;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "depreciation_rules")
+@Table(name = "roles")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class DepreciationRule {
+public class Role {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
-    private String ruleName;
+    @Column(unique = true, nullable = false)
+    private String name;
 
-    private String method; // STRAIGHT_LINE or DECLINING_BALANCE
-    private Integer usefulLifeYears;
-    private Double salvageValue;
-    private LocalDateTime createdAt;
+    public Role(String name) {
+        this.name = name;
+    }
 }
