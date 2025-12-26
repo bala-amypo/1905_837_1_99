@@ -33,7 +33,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/disposals/approve/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
-            .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))) // <--- FORCE 401
+            // Fix: Force 401 instead of 403 for unauthenticated users
+            .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -15,7 +15,7 @@ public class JwtUtil {
     public String generateToken(String email, Long userId, Set<String> roles) {
         return Jwts.builder()
                 .setSubject(email)
-                .claim("email", email) // <--- ADDED THIS LINE
+                .claim("email", email) // <--- ADDED THIS CLAIM
                 .claim("userId", userId)
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
