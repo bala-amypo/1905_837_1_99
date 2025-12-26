@@ -35,7 +35,7 @@ public class AuthController {
         String jwt = jwtUtil.generateToken(
                 user.getEmail(),
                 user.getId(),
-                user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet()));
+                user.getRoles());
 
         return ResponseEntity.ok(new AuthResponse(
                 jwt,
