@@ -8,10 +8,7 @@ import com.example.demo.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.stream.Collectors;
 
@@ -26,22 +23,31 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
+
         User user = userService.findByEmail(authRequest.getEmail());
 
         if (!passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
             return ResponseEntity.status(401).build();
         }
 
-        String jwt = jwtUtil.generateTokenFromRoles(
+        String token = jwtUtil.generateToken(
                 user.getEmail(),
                 user.getId(),
-                user.getRoles());
+                user.getRoles().stream()
+                        .map(r -> r.getName())
+                        .collect(Collectors.toSet())
+        );
 
-        return ResponseEntity.ok(new AuthResponse(
-                jwt,
-                user.getId(),
-                user.getEmail(),
-                user.getRoles().stream().map(role -> role.getName()).collect(Collectors.toSet())));
+        return ResponseEntity.ok(
+                new AuthResponse(
+                        token,
+                        user.getId(),
+                        user.getEmail(),
+                        user.getRoles().stream()
+                                .map(r -> r.getName())
+                                .collect(Collectors.toSet())
+                )
+        );
     }
 
     @PostMapping("/register")

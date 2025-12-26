@@ -37,17 +37,17 @@ public class JwtFilter extends OncePerRequestFilter {
                 String email = jwtUtil.extractUsername(token);
 
                 @SuppressWarnings("unchecked")
-                List<String> roles = (List<String>) jwtUtil.getClaims(token).get("roles");
+                List<String> roles =
+                        (List<String>) jwtUtil.getClaims(token).get("roles");
 
                 var authorities = roles.stream()
                         .map(r -> new SimpleGrantedAuthority("ROLE_" + r))
                         .collect(Collectors.toList());
 
-                // ✅ KEY FIX: fully authenticated token
-                UsernamePasswordAuthenticationToken auth =
+                UsernamePasswordAuthenticationToken authentication =
                         new UsernamePasswordAuthenticationToken(email, null, authorities);
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 

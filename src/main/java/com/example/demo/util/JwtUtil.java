@@ -1,6 +1,7 @@
 package com.example.demo.util;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ public class JwtUtil {
         this.expiration = expiration;
     }
 
-    // ✅ SINGLE STANDARD TOKEN FORMAT (tests + auth use same)
+    // SINGLE STANDARD TOKEN FORMAT (used by tests + login)
     public String generateToken(String email, Long userId, Set<String> roles) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("email", email);
