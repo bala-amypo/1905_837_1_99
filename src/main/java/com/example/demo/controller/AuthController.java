@@ -31,37 +31,43 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         try {
-            // Register User
+            // 1. Call Service
             User user = userService.registerUser(body);
 
-            // Manual Map Construction (Prevents Serialization Errors)
-            Map<String, Object> response = new HashMap<>();
+            // 2. FIX: Build a simple Map response. 
+            // Do NOT return 'user' entity directly. It causes the 500 Error.
+            Map<String, Object> response = new LinkedHashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
             response.put("name", user.getName());
-            response.put("message", "User registered successfully");
+            response.put("status", "success");
             
             return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            // Log the error specifically for debugging
-            System.err.println("REGISTRATION FAILED: " + e.getMessage());
+            // 3. Log Error for Debugging
+            System.err.println("REGISTER ERROR: " + e.getMessage());
             e.printStackTrace();
-            // Return 500 with error message in body
-            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest req) {
-        Authentication authentication = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
-        
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            Authentication authentication = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
+            
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
-        Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
-        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
-        
-        return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
+            User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
+            Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
+            String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
+            
+            return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
+        } catch (Exception e) {
+             System.err.println("LOGIN ERROR: " + e.getMessage());
+             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
+        }
     }
 }

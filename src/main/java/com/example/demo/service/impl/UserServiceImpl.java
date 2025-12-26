@@ -26,9 +26,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User registerUser(Map<String, String> userData) {
         String email = userData.get("email");
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email is required");
-        }
+        if (email == null || email.isEmpty()) throw new IllegalArgumentException("Email required");
+        
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
@@ -38,12 +37,13 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPassword(encoder.encode(userData.get("password")));
         
-        // Find Role or Create if missing
+        // Ensure USER role exists
         Role userRole = roleRepository.findByName("USER")
-                .orElseGet(() -> roleRepository.save(new Role("USER")));
+                .orElseGet(() -> roleRepository.saveAndFlush(new Role("USER")));
         
         user.getRoles().add(userRole);
         
-        return userRepository.save(user);
+        // Use saveAndFlush to catch DB errors immediately
+        return userRepository.saveAndFlush(user);
     }
 }
