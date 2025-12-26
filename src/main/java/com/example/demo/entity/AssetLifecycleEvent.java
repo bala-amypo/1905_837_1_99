@@ -1,15 +1,11 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "asset_lifecycle_events")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class AssetLifecycleEvent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +19,20 @@ public class AssetLifecycleEvent {
     private LocalDate eventDate;
     private LocalDateTime loggedAt;
 
+    public AssetLifecycleEvent() {}
+
     @PrePersist
     public void prePersist() { this.loggedAt = LocalDateTime.now(); }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public Asset getAsset() { return asset; }
+    public void setAsset(Asset asset) { this.asset = asset; }
+    public String getEventType() { return eventType; }
+    public void setEventType(String eventType) { this.eventType = eventType; }
+    public String getEventDescription() { return eventDescription; }
+    public void setEventDescription(String eventDescription) { this.eventDescription = eventDescription; }
+    public LocalDate getEventDate() { return eventDate; }
+    public void setEventDate(LocalDate eventDate) { this.eventDate = eventDate; }
+    public LocalDateTime getLoggedAt() { return loggedAt; }
 }
