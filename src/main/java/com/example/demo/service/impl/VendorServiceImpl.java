@@ -1,33 +1,28 @@
 package com.example.demo.service.impl;
-
 import com.example.demo.entity.Vendor;
-import com.example.demo.exception.BadRequestException;
 import com.example.demo.repository.VendorRepository;
-import com.example.demo.service.VendorService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
-public class VendorServiceImpl implements VendorService {
+public class VendorServiceImpl {
+    private final VendorRepository repository;
 
-    private final VendorRepository vendorRepository;
+    public VendorServiceImpl(VendorRepository repository) { this.repository = repository; }
 
-    @Override
     public Vendor createVendor(Vendor vendor) {
-        if (vendorRepository.findByVendorName(vendor.getVendorName()).isPresent()) {
-            throw new BadRequestException("Vendor name must be unique");
+        if (repository.findByVendorName(vendor.getVendorName()).isPresent()) {
+            throw new IllegalArgumentException("Vendor name exists");
         }
-
-        vendor.setCreatedAt(LocalDateTime.now());
-        return vendorRepository.save(vendor);
+        if (!vendor.getContactEmail().contains("@")) {
+            throw new IllegalArgumentException("Invalid email");
+        }
+        return repository.save(vendor);
     }
 
-    @Override
-    public List<Vendor> getAllVendors() {
-        return vendorRepository.findAll();
+    public List<Vendor> getAllVendors() { return repository.findAll(); }
+    
+    public Vendor getVendor(Long id) {
+        return repository.findById(id).orElseThrow(() -> new IllegalArgumentException("Vendor not found"));
     }
 }

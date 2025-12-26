@@ -1,57 +1,42 @@
 package com.example.demo.controller;
-
-import com.example.demo.dto.AuthRequest;
-import com.example.demo.dto.AuthResponse;
+import com.example.demo.dto.*;
 import com.example.demo.entity.User;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
 public class AuthController {
-
-    private final UserService userService;
+    private final AuthenticationManager authManager;
     private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;
+    private final UserRepository userRepo;
 
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
-
-        User user = userService.findByEmail(authRequest.getEmail());
-
-        if (!passwordEncoder.matches(authRequest.getPassword(), user.getPassword())) {
-            return ResponseEntity.status(401).build();
-        }
-
-        String token = jwtUtil.generateToken(
-                user.getEmail(),
-                user.getId(),
-                user.getRoles().stream()
-                        .map(r -> r.getName())
-                        .collect(Collectors.toSet())
-        );
-
-        return ResponseEntity.ok(
-                new AuthResponse(
-                        token,
-                        user.getId(),
-                        user.getEmail(),
-                        user.getRoles().stream()
-                                .map(r -> r.getName())
-                                .collect(Collectors.toSet())
-                )
-        );
+    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil, UserService userService, UserRepository userRepo) {
+        this.authManager = authManager;
+        this.jwtUtil = jwtUtil;
+        this.userService = userService;
+        this.userRepo = userRepo;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
-        return ResponseEntity.ok(userService.registerUser(user));
+    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(userService.registerUser(body));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthRequest req) {
+        authManager.authenticate(new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
+        User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
+        Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
+        return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
     }
 }
