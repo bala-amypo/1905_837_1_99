@@ -23,7 +23,7 @@ public class User {
 
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    // 🔥 CRITICAL FIX: NO PERSIST CASCADE
+    // 🔥 IMPORTANT: MERGE only (NO PERSIST)
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.MERGE)
     @JoinTable(
             name = "user_roles",
@@ -34,6 +34,8 @@ public class User {
 
     public User() {}
 
+    // ================= GETTERS =================
+
     public Long getId() {
         return id;
     }
@@ -42,24 +44,12 @@ public class User {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getPassword() {
         return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 
     public LocalDateTime getCreatedAt() {
@@ -68,6 +58,25 @@ public class User {
 
     public Set<Role> getRoles() {
         return roles;
+    }
+
+    // ================= SETTERS =================
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    // 🔥 THIS FIXES YOUR COMPILATION ERROR
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
     public void setRoles(Set<Role> roles) {
