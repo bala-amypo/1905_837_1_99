@@ -29,20 +29,18 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-            User user = userService.registerUser(body);
+            User user = userService.registerUser(request);
 
-            // Return simple Map
+            // Return clean JSON map
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
-            response.put("message", "Success");
+            response.put("status", "Success");
             
             return ResponseEntity.ok(response);
-        } catch (Throwable e) {
-            // Print exact error to console
-            System.err.println("CRITICAL REGISTER ERROR: " + e.getMessage());
+        } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }

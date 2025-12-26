@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
 import com.example.demo.repository.RoleRepository;
@@ -7,8 +8,6 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import java.util.Map;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -23,29 +22,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional // Must be transactional to attach Role correctly
-    public User registerUser(Map<String, String> userData) {
-        String email = userData.get("email");
-        if (email == null || email.isEmpty()) throw new IllegalArgumentException("Email is required");
+    public User registerUser(RegisterRequest req) {
+        if (req.getEmail() == null || req.getEmail().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
         
-        if (userRepository.findByEmail(email).isPresent()) {
+        if (userRepository.findByEmail(req.getEmail()).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
 
         User user = new User();
-        user.setName(userData.get("name"));
-        user.setEmail(email);
-        user.setPassword(encoder.encode(userData.get("password")));
-        
-        // Safe Role Lookup: We assume DataSeeder created it. 
-        // If not found, we fallback to ADMIN or create new as last resort.
-        Role userRole = roleRepository.findByName("USER").orElse(null);
+        user.setName(req.getName());
+        user.setEmail(req.getEmail());
+        user.setPassword(encoder.encode(req.getPassword()));
+
+        // Safe Role Logic (Assumes DataSeeder ran, falls back safely)
+        Role userRole = roleRepository.findByName("USER")
+                .orElse(roleRepository.findByName("ADMIN").orElse(null));
+
         if (userRole == null) {
-            // Last resort creation
-             userRole = roleRepository.save(new Role("USER"));
+            // Emergency fallback if Seeder failed
+             try { userRole = roleRepository.save(new Role("USER")); } catch (Exception e) {}
         }
         
-        user.getRoles().add(userRole);
+        if (userRole != null) user.getRoles().add(userRole);
+
         return userRepository.save(user);
     }
 }

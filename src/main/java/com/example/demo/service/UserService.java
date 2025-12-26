@@ -1,7 +1,10 @@
 package com.example.demo.service;
+
 import com.example.demo.entity.User;
+import com.example.demo.dto.RegisterRequest; // Import the new DTO
 import java.util.Map;
 
 public interface UserService {
-    User registerUser(Map<String, String> userData);
+    // Change parameter from Map to RegisterRequest
+    User registerUser(RegisterRequest request); 
 }
