@@ -30,17 +30,24 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
-        // Register the user logic
-        User user = userService.registerUser(body);
+        try {
+            // Register user via Service
+            User user = userService.registerUser(body);
 
-        // FIX: Return a manual Map to safely serialize response
-        Map<String, Object> response = new LinkedHashMap<>();
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("name", user.getName());
-        response.put("message", "User registered successfully");
-        
-        return ResponseEntity.ok(response);
+            // FIX: Create a manual Map for the response. 
+            // Returning the 'User' entity directly causes Jackson Serialization Error (500).
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("id", user.getId());
+            response.put("email", user.getEmail());
+            response.put("name", user.getName());
+            response.put("message", "User registered successfully");
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Log the error to the console so we know WHY it failed
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/login")

@@ -35,7 +35,8 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPassword(encoder.encode(userData.get("password")));
         
-        // Ensure "USER" role exists
+        // Robust Role Logic: Use findByName, if not found, create new.
+        // This prevents "Role not found" errors.
         Role userRole = roleRepository.findByName("USER")
                 .orElseGet(() -> roleRepository.save(new Role("USER")));
         
