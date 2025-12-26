@@ -29,18 +29,24 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> body) {
         try {
             User user = userService.registerUser(body);
+
+            // Construct safe response
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId());
+            response.put("email", user.getEmail());
+            response.put("name", user.getName());
+            response.put("status", "success");
             
-            // MANUAL JSON CONSTRUCTION (No Jackson crashes possible)
-            String jsonResponse = String.format("{\"id\":%d, \"email\":\"%s\", \"message\":\"Success\"}", 
-                    user.getId(), user.getEmail());
-            
-            return ResponseEntity.ok(jsonResponse);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace(); // Print error to server logs
-            return ResponseEntity.badRequest().body("{\"error\": \"" + e.getMessage() + "\"}");
+            // Log for debugging
+            System.out.println("REGISTRATION FAILED: " + e.getMessage());
+            Map<String, Object> errorResp = new HashMap<>();
+            errorResp.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResp);
         }
     }
 
@@ -58,8 +64,7 @@ public class AuthController {
             
             return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(401).body("{\"error\": \"Invalid credentials\"}");
+            return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
         }
     }
 }

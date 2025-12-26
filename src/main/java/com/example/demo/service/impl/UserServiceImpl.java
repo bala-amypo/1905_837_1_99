@@ -24,7 +24,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional
     public User registerUser(Map<String, String> userData) {
         String email = userData.get("email");
         if (email == null || email.trim().isEmpty()) {
@@ -39,25 +38,23 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPassword(encoder.encode(userData.get("password")));
         
-        // --- ROBUST ROLE HANDLING ---
-        // 1. Try to find the role
-        Optional<Role> roleOpt = roleRepository.findByName("USER");
-        Role userRole;
+        // Fix: Fetch role safely. If not found, try to save it in a separate try-block
+        // to avoid marking the main transaction as rollback-only if a race condition occurs.
+        Role userRole = roleRepository.findByName("USER").orElse(null);
         
-        if (roleOpt.isPresent()) {
-            userRole = roleOpt.get();
-        } else {
-            // 2. If not found, try to save. If save fails (race condition), try find again.
+        if (userRole == null) {
             try {
-                userRole = roleRepository.saveAndFlush(new Role("USER"));
+                userRole = roleRepository.save(new Role("USER"));
             } catch (Exception e) {
-                // If it crashed, it means the role was created ms ago by another thread/test
+                // If save fails, it means another thread/test created it just now. Fetch it.
                 userRole = roleRepository.findByName("USER")
-                        .orElseThrow(() -> new RuntimeException("Role USER could not be created or found"));
+                        .orElseThrow(() -> new RuntimeException("Error handling USER role"));
             }
         }
         
         user.getRoles().add(userRole);
-        return userRepository.saveAndFlush(user);
+        
+        // Save the user
+        return userRepository.save(user);
     }
 }
