@@ -32,7 +32,7 @@ public class AuthController {
             return ResponseEntity.status(401).build();
         }
 
-        String jwt = jwtUtil.generateToken(
+        String jwt = jwtUtil.generateTokenFromRoles(
                 user.getEmail(),
                 user.getId(),
                 user.getRoles());
