@@ -33,14 +33,16 @@ public class AuthController {
         try {
             User user = userService.registerUser(body);
 
-            // Return safe Map response
+            // Return simple Map
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
-            response.put("status", "User registered successfully");
+            response.put("message", "Success");
             
             return ResponseEntity.ok(response);
-        } catch (Exception e) {
+        } catch (Throwable e) {
+            // Print exact error to console
+            System.err.println("CRITICAL REGISTER ERROR: " + e.getMessage());
             e.printStackTrace();
             return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }

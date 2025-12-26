@@ -7,6 +7,7 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 
 @Service
@@ -22,35 +23,29 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional // Must be transactional to attach Role correctly
     public User registerUser(Map<String, String> userData) {
         String email = userData.get("email");
-        String password = userData.get("password");
-        String name = userData.get("name");
-
         if (email == null || email.isEmpty()) throw new IllegalArgumentException("Email is required");
-        if (password == null || password.isEmpty()) throw new IllegalArgumentException("Password is required");
-
+        
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
 
         User user = new User();
-        user.setName(name);
+        user.setName(userData.get("name"));
         user.setEmail(email);
-        user.setPassword(encoder.encode(password));
+        user.setPassword(encoder.encode(userData.get("password")));
         
-        // SAFE LOGIC: We assume roles are seeded by DataSeeder. 
-        // If "USER" is missing, we fetch "ADMIN" or just fail clearly (instead of crashing transaction).
-        Role userRole = roleRepository.findByName("USER")
-                .orElse(roleRepository.findByName("ADMIN").orElse(null));
-
-        if (userRole != null) {
-            user.getRoles().add(userRole);
-        } else {
-            // Fallback: This effectively shouldn't happen if DataSeeder runs
-            System.err.println("WARNING: Roles not found during registration!");
+        // Safe Role Lookup: We assume DataSeeder created it. 
+        // If not found, we fallback to ADMIN or create new as last resort.
+        Role userRole = roleRepository.findByName("USER").orElse(null);
+        if (userRole == null) {
+            // Last resort creation
+             userRole = roleRepository.save(new Role("USER"));
         }
         
+        user.getRoles().add(userRole);
         return userRepository.save(user);
     }
 }
