@@ -1,4 +1,5 @@
 package com.example.demo.controller;
+
 import com.example.demo.dto.*;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
@@ -6,8 +7,8 @@ import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication; // Import this
-import org.springframework.security.core.context.SecurityContextHolder; // Import this
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,8 +30,18 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
-        // Just return the User object, which Spring converts to a Map-like JSON structure automatically
-        return ResponseEntity.ok(userService.registerUser(body));
+        // Register the user
+        User user = userService.registerUser(body);
+
+        // FIX: Return a clean Map/DTO instead of the User entity.
+        // This avoids Jackson serialization errors with LocalDateTime or Passwords.
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("name", user.getName());
+        // Do NOT include password or complex objects here
+        
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -43,6 +54,7 @@ public class AuthController {
         User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
         Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
         String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
+        
         return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
     }
 }

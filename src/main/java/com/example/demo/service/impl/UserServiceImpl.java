@@ -7,7 +7,7 @@ import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Added Transactional
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 
 @Service
@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Transactional // Ensure role creation and user saving happen in one transaction
+    @Transactional
     public User registerUser(Map<String, String> userData) {
         String email = userData.get("email");
         if (userRepository.findByEmail(email).isPresent()) {
@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPassword(encoder.encode(userData.get("password")));
         
-        // FIX: Check if role exists, if not, save it immediately
+        // Robust Role Handling: Create if missing
         Role userRole = roleRepository.findByName("USER")
                 .orElseGet(() -> roleRepository.save(new Role("USER")));
         
