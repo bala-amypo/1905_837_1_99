@@ -26,6 +26,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public User registerUser(Map<String, String> userData) {
         String email = userData.get("email");
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email is required");
+        }
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
@@ -35,8 +38,7 @@ public class UserServiceImpl implements UserService {
         user.setEmail(email);
         user.setPassword(encoder.encode(userData.get("password")));
         
-        // Robust Role Logic: Use findByName, if not found, create new.
-        // This prevents "Role not found" errors.
+        // Find Role or Create if missing
         Role userRole = roleRepository.findByName("USER")
                 .orElseGet(() -> roleRepository.save(new Role("USER")));
         
