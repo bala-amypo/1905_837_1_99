@@ -14,6 +14,7 @@ public class AuthResponse {
         this.roles = roles;
     }
 
+    // Getters/Setters needed for JSON serialization
     public String getToken() { return token; }
     public void setToken(String token) { this.token = token; }
     public Long getUserId() { return userId; }

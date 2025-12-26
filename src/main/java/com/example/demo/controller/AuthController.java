@@ -29,11 +29,11 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         try {
             User user = userService.registerUser(body);
 
-            // Create Safe Response
+            // Return clean DTO to avoid JSON recursion/error
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
@@ -41,10 +41,8 @@ public class AuthController {
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            e.printStackTrace(); // Print error to console
-            Map<String, Object> err = new HashMap<>();
-            err.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(err);
+            e.printStackTrace(); // View console for error
+            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
@@ -62,6 +60,7 @@ public class AuthController {
             
             return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
         }
     }

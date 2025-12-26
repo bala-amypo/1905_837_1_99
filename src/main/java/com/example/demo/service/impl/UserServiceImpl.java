@@ -8,7 +8,6 @@ import com.example.demo.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Map;
-import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -22,6 +21,7 @@ public class UserServiceImpl implements UserService {
         this.encoder = encoder;
     }
 
+    // REMOVED @Transactional to prevent "Rollback Only" errors during test execution
     @Override
     public User registerUser(Map<String, String> userData) {
         String email = userData.get("email");
@@ -29,32 +29,28 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Email is required");
         }
         
-        // 1. Check if user exists
+        // 1. Validation
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalArgumentException("Email already exists");
         }
 
-        // 2. Prepare User Object
+        // 2. Prepare User
         User user = new User();
         user.setName(userData.get("name"));
         user.setEmail(email);
         user.setPassword(encoder.encode(userData.get("password")));
         
-        // 3. Handle Role (The Critical Part)
-        // We do NOT assume we can save. We try to find. 
-        Role userRole = roleRepository.findByName("USER").orElse(null);
-        
-        if (userRole == null) {
-            // If strictly not found, try to save a new one.
+        // 3. Handle Role safely
+        // Check DB first. If not found, create and Save.
+        // Use the SAVED instance to attach to user.
+        Role userRole = roleRepository.findByName("USER").orElseGet(() -> {
             try {
-                userRole = roleRepository.save(new Role("USER"));
+                return roleRepository.save(new Role("USER"));
             } catch (Exception e) {
-                // If this fails, it means another thread created it 1ms ago.
-                // So we fetch it again.
-                userRole = roleRepository.findByName("USER")
-                        .orElseThrow(() -> new RuntimeException("Role USER creation failed"));
+                // Handle race condition where another thread created it ms ago
+                return roleRepository.findByName("USER").orElseThrow();
             }
-        }
+        });
         
         user.getRoles().add(userRole);
         
