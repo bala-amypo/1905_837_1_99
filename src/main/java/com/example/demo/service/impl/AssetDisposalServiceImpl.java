@@ -1,11 +1,13 @@
 package com.example.demo.service.impl;
+
 import com.example.demo.entity.AssetDisposal;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.*;
+import com.example.demo.service.AssetDisposalService;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AssetDisposalServiceImpl {
+public class AssetDisposalServiceImpl implements AssetDisposalService {
     private final AssetDisposalRepository disposalRepo;
     private final AssetRepository assetRepo;
     private final UserRepository userRepo;
@@ -16,6 +18,7 @@ public class AssetDisposalServiceImpl {
         this.userRepo = userRepo;
     }
 
+    @Override
     public AssetDisposal requestDisposal(Long assetId, AssetDisposal disposal) {
         var asset = assetRepo.findById(assetId).orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
         if (disposal.getDisposalValue() < 0) throw new IllegalArgumentException("Invalid value");
@@ -23,11 +26,12 @@ public class AssetDisposalServiceImpl {
         return disposalRepo.save(disposal);
     }
 
+    @Override
     public AssetDisposal approveDisposal(Long disposalId, Long adminId) {
         var disposal = disposalRepo.findById(disposalId).orElseThrow(() -> new ResourceNotFoundException("Disposal not found"));
         var admin = userRepo.findById(adminId).orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
         
-        // Ensure only admin can approve (Double check logic, usually handled by SecurityConfig too)
+        // Security check: typically handled by security config, but logic check here too
         boolean isAdmin = admin.getRoles().stream().anyMatch(r -> r.getName().equals("ADMIN"));
         if (!isAdmin) throw new IllegalArgumentException("User is not admin");
 
