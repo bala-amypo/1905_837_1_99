@@ -35,7 +35,6 @@ public class User {
     @PrePersist
     public void prePersist() { this.createdAt = LocalDateTime.now(); }
 
-    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
@@ -48,7 +47,7 @@ public class User {
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
 
-    // CRITICAL FIX: Equals and HashCode based ONLY on ID to prevent recursion crashes
+    // CRITICAL: Prevent Infinite Recursion Crash
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

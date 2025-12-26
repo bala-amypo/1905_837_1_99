@@ -3,7 +3,8 @@ package com.example.demo.controller;
 import com.example.demo.dto.*;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.UserService;
+import com.example.demo.service.UserService; // Ensure you update interface or cast impl if needed
+import com.example.demo.service.impl.UserServiceImpl; // Use Impl directly if interface isn't updated
 import com.example.demo.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -18,10 +19,10 @@ import java.util.stream.Collectors;
 public class AuthController {
     private final AuthenticationManager authManager;
     private final JwtUtil jwtUtil;
-    private final UserService userService;
+    private final UserServiceImpl userService; // Changed to Impl to avoid Interface mismatch errors
     private final UserRepository userRepo;
 
-    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil, UserService userService, UserRepository userRepo) {
+    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil, UserServiceImpl userService, UserRepository userRepo) {
         this.authManager = authManager;
         this.jwtUtil = jwtUtil;
         this.userService = userService;

@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService {
         this.encoder = encoder;
     }
 
-    @Override
+    // REMOVE @Override if your interface is not updated yet, but ideally update interface too.
     public User registerUser(RegisterRequest req) {
         if (req.getEmail() == null || req.getEmail().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -36,12 +36,12 @@ public class UserServiceImpl implements UserService {
         user.setEmail(req.getEmail());
         user.setPassword(encoder.encode(req.getPassword()));
 
-        // Safe Role Logic (Assumes DataSeeder ran, falls back safely)
+        // Safe Role Logic
         Role userRole = roleRepository.findByName("USER")
                 .orElse(roleRepository.findByName("ADMIN").orElse(null));
 
         if (userRole == null) {
-            // Emergency fallback if Seeder failed
+            // Emergency fallback
              try { userRole = roleRepository.save(new Role("USER")); } catch (Exception e) {}
         }
         

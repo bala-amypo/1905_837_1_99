@@ -5,7 +5,6 @@ public class RegisterRequest {
     private String email;
     private String password;
 
-    // Default constructor needed for JSON parsing
     public RegisterRequest() {}
 
     public RegisterRequest(String name, String email, String password) {
