@@ -4,27 +4,24 @@ import com.example.demo.entity.Vendor;
 import com.example.demo.exception.BadRequestException;
 import com.example.demo.repository.VendorRepository;
 import com.example.demo.service.VendorService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class VendorServiceImpl implements VendorService {
 
     private final VendorRepository vendorRepository;
-
-    public VendorServiceImpl(VendorRepository vendorRepository) {
-        this.vendorRepository = vendorRepository;
-    }
 
     @Override
     public Vendor createVendor(Vendor vendor) {
         if (vendorRepository.findByVendorName(vendor.getVendorName()).isPresent()) {
             throw new BadRequestException("Vendor name must be unique");
         }
-        if (vendor.getContactEmail() == null || !vendor.getContactEmail().contains("@")) {
-            throw new BadRequestException("Invalid email format");
-        }
+
         vendor.setCreatedAt(LocalDateTime.now());
         return vendorRepository.save(vendor);
     }
