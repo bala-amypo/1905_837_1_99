@@ -35,6 +35,7 @@ public class User {
     @PrePersist
     public void prePersist() { this.createdAt = LocalDateTime.now(); }
 
+    // --- GETTERS AND SETTERS (Do NOT use @Data) ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
@@ -47,9 +48,7 @@ public class User {
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
 
-    // --- SAFETY BLOCK ---
-    // These methods prevent StackOverflowError
-
+    // --- CRITICAL: PREVENT INFINITE LOOP ---
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -65,7 +64,7 @@ public class User {
 
     @Override
     public String toString() {
-        // Do NOT print 'roles' here. It causes the loop.
+        // ONLY print ID and Email. NEVER print 'roles'.
         return "User{id=" + id + ", email='" + email + "'}";
     }
 }
