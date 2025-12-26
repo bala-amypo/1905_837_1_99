@@ -30,16 +30,15 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
-        // Register the user
+        // Register the user logic
         User user = userService.registerUser(body);
 
-        // FIX: Return a clean Map/DTO instead of the User entity.
-        // This avoids Jackson serialization errors with LocalDateTime or Passwords.
+        // FIX: Return a manual Map to safely serialize response
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("id", user.getId());
         response.put("email", user.getEmail());
         response.put("name", user.getName());
-        // Do NOT include password or complex objects here
+        response.put("message", "User registered successfully");
         
         return ResponseEntity.ok(response);
     }
