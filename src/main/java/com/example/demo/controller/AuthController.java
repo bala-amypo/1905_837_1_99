@@ -3,7 +3,8 @@ package com.example.demo.controller;
 import com.example.demo.dto.*;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.impl.UserServiceImpl; // Use Impl
+import com.example.demo.service.UserService; // Ensure correct import
+import com.example.demo.service.impl.UserServiceImpl; // Or Use Impl directly
 import com.example.demo.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -32,14 +33,10 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
             User user = userService.registerUser(request);
-
-            // Manual JSON Map to prevent Recursion
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
-            response.put("role", request.getRole() != null ? request.getRole() : "USER");
             response.put("status", "Success");
-            
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
@@ -50,19 +47,26 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest req) {
         try {
+            // 1. Authenticate (Triggers User.toString() internally in logs)
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
             
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
+            // 2. Fetch User Details safely
             User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
             Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
+            
+            // 3. Generate Token
             String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
             
             return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
+        } catch (Exception e) {
+            // If it crashes, print WHY.
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", "Login Error: " + e.getMessage()));
         }
     }
 }

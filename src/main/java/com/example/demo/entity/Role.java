@@ -21,8 +21,7 @@ public class Role {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
-    // --- SAFETY FIXES ---
-
+    // --- CRITICAL: PREVENT INFINITE LOOP ---
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -38,9 +37,6 @@ public class Role {
 
     @Override
     public String toString() {
-        return "Role{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                '}';
+        return "Role{id=" + id + ", name='" + name + "'}";
     }
 }
