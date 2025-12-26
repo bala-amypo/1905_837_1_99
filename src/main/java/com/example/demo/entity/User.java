@@ -47,9 +47,9 @@ public class User {
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
 
-    // --- SAFETY FIXES ---
+    // --- SAFETY BLOCK ---
+    // These methods prevent StackOverflowError
 
-    // Prevent Infinite Loop in HashSets
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -63,12 +63,9 @@ public class User {
         return Objects.hash(id);
     }
 
-    // CRITICAL: Prevent Infinite Loop in Logs/Console
     @Override
     public String toString() {
-        return "User{" +
-                "id=" + id +
-                ", email='" + email + '\'' +
-                '}'; // Do NOT include 'roles' here
+        // Do NOT print 'roles' here. It causes the loop.
+        return "User{id=" + id + ", email='" + email + "'}";
     }
 }

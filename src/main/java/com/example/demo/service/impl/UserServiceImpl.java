@@ -21,7 +21,7 @@ public class UserServiceImpl implements UserService {
         this.encoder = encoder;
     }
 
-    // REMOVE @Override if your interface is not updated yet, but ideally update interface too.
+    // REMOVE @Override if interface signature doesn't match, or update Interface.
     public User registerUser(RegisterRequest req) {
         if (req.getEmail() == null || req.getEmail().isEmpty()) {
             throw new IllegalArgumentException("Email is required");
@@ -36,16 +36,24 @@ public class UserServiceImpl implements UserService {
         user.setEmail(req.getEmail());
         user.setPassword(encoder.encode(req.getPassword()));
 
-        // Safe Role Logic
-        Role userRole = roleRepository.findByName("USER")
-                .orElse(roleRepository.findByName("ADMIN").orElse(null));
+        // --- DYNAMIC ROLE LOGIC ---
+        // 1. Get role name from request, default to "USER" if empty
+        String roleName = (req.getRole() != null && !req.getRole().isEmpty()) 
+                          ? req.getRole().toUpperCase() 
+                          : "USER";
 
+        // 2. Find or Create Role
+        Role userRole = roleRepository.findByName(roleName).orElse(null);
         if (userRole == null) {
-            // Emergency fallback
-             try { userRole = roleRepository.save(new Role("USER")); } catch (Exception e) {}
+            try {
+                userRole = roleRepository.save(new Role(roleName));
+            } catch (Exception e) {
+                // Handle race condition
+                userRole = roleRepository.findByName(roleName).orElseThrow();
+            }
         }
         
-        if (userRole != null) user.getRoles().add(userRole);
+        user.getRoles().add(userRole);
 
         return userRepository.save(user);
     }
