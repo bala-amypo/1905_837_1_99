@@ -13,11 +13,11 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtFilter extends OncePerRequestFilter {
+
     private final JwtUtil jwtUtil;
 
     public JwtFilter(JwtUtil jwtUtil) {
@@ -25,15 +25,32 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain chain
+    ) throws ServletException, IOException {
+
+        String path = request.getServletPath();
+
+        // 🔓 IMPORTANT: SKIP JWT FOR PUBLIC ENDPOINTS
+        if (path.startsWith("/auth/")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.equals("/")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         String header = request.getHeader("Authorization");
 
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
+
             if (jwtUtil.validateToken(token)) {
                 var claims = jwtUtil.getClaims(token);
-                String email = claims.getSubject();
+
+                String email = claims.get("email", String.class);
                 List<?> roles = claims.get("roles", List.class);
 
                 var authorities = roles.stream()
@@ -42,9 +59,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
                 UsernamePasswordAuthenticationToken auth =
                         new UsernamePasswordAuthenticationToken(email, null, authorities);
+
                 SecurityContextHolder.getContext().setAuthentication(auth);
             }
         }
+
         chain.doFilter(request, response);
     }
 }
