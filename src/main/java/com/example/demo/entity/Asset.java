@@ -17,12 +17,14 @@ public class Asset {
     private String assetName;
 
     @ManyToOne
+    @JoinColumn(name = "vendor_id")
     private Vendor vendor;
 
     private LocalDate purchaseDate;
     private Double purchaseCost;
 
     @ManyToOne
+    @JoinColumn(name = "depreciation_rule_id")
     private DepreciationRule depreciationRule;
 
     private String status = "ACTIVE";
@@ -36,6 +38,7 @@ public class Asset {
         if (this.status == null) this.status = "ACTIVE";
     }
 
+    // --- Getters and Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getAssetTag() { return assetTag; }

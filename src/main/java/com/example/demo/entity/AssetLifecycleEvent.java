@@ -12,6 +12,7 @@ public class AssetLifecycleEvent {
     private Long id;
 
     @ManyToOne
+    @JoinColumn(name = "asset_id")
     private Asset asset;
 
     private String eventType;
@@ -24,6 +25,7 @@ public class AssetLifecycleEvent {
     @PrePersist
     public void prePersist() { this.loggedAt = LocalDateTime.now(); }
 
+    // --- Getters and Setters ---
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public Asset getAsset() { return asset; }
