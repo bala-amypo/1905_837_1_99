@@ -30,15 +30,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> body) {
-        User user = userService.registerUser(body);
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);        // ⭐ REQUIRED BY TEST
-        response.put("id", user.getId());
-        response.put("email", user.getEmail());
-        response.put("name", user.getName());
-
-        return ResponseEntity.ok(response);
+    public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
+        return ResponseEntity.ok(userService.registerUser(request));
     }
 
     @PostMapping("/login")
