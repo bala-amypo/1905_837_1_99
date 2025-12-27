@@ -1,3 +1,17 @@
+package com.example.demo.config;
+
+import com.example.demo.entity.Asset;
+import com.example.demo.entity.DepreciationRule;
+import com.example.demo.entity.Vendor;
+import com.example.demo.repository.AssetRepository;
+import com.example.demo.repository.DepreciationRuleRepository;
+import com.example.demo.repository.VendorRepository;
+
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
+
 @Component
 public class DataSeeder implements CommandLineRunner {
 
@@ -5,9 +19,11 @@ public class DataSeeder implements CommandLineRunner {
     private final VendorRepository vendorRepo;
     private final DepreciationRuleRepository ruleRepo;
 
-    public DataSeeder(AssetRepository assetRepo,
-                      VendorRepository vendorRepo,
-                      DepreciationRuleRepository ruleRepo) {
+    public DataSeeder(
+            AssetRepository assetRepo,
+            VendorRepository vendorRepo,
+            DepreciationRuleRepository ruleRepo
+    ) {
         this.assetRepo = assetRepo;
         this.vendorRepo = vendorRepo;
         this.ruleRepo = ruleRepo;
@@ -35,15 +51,15 @@ public class DataSeeder implements CommandLineRunner {
                 });
 
         if (!assetRepo.existsByAssetTag("INTEG-TAG-001")) {
-            Asset a = new Asset();
-            a.setAssetTag("INTEG-TAG-001");
-            a.setAssetName("ExistingAsset");
-            a.setVendor(vendor);
-            a.setDepreciationRule(rule);
-            a.setPurchaseCost(1000.0);
-            a.setPurchaseDate(LocalDate.now());
-            a.setStatus("ACTIVE");
-            assetRepo.save(a);
+            Asset asset = new Asset();
+            asset.setAssetTag("INTEG-TAG-001");
+            asset.setAssetName("ExistingAsset");
+            asset.setVendor(vendor);
+            asset.setDepreciationRule(rule);
+            asset.setPurchaseCost(1000.0);
+            asset.setPurchaseDate(LocalDate.now());
+            asset.setStatus("ACTIVE");
+            assetRepo.save(asset);
         }
     }
 }
