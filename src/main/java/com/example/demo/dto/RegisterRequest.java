@@ -12,7 +12,7 @@ public class RegisterRequest {
         this.name = name;
         this.email = email;
         this.password = password;
-        this.role = role;
+        this.role = "USER";
     }
 
     public String getName() { return name; }
@@ -22,5 +22,5 @@ public class RegisterRequest {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
     public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public void setRole(String role) { this.role = "USER"; }
 }
