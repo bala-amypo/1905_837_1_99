@@ -1,45 +1,31 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.entity.Asset;
+import com.example.demo.entity.*;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.repository.*;
-import com.example.demo.service.AssetService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class AssetServiceImpl implements AssetService {
+@RequiredArgsConstructor
+public class AssetServiceImpl {
     private final AssetRepository assetRepo;
     private final VendorRepository vendorRepo;
     private final DepreciationRuleRepository ruleRepo;
 
-    public AssetServiceImpl(AssetRepository assetRepo, VendorRepository vendorRepo, DepreciationRuleRepository ruleRepo) {
-        this.assetRepo = assetRepo;
-        this.vendorRepo = vendorRepo;
-        this.ruleRepo = ruleRepo;
-    }
-
-    @Override
     public Asset createAsset(Long vendorId, Long ruleId, Asset asset) {
-        var vendor = vendorRepo.findById(vendorId).orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
-        var rule = ruleRepo.findById(ruleId).orElseThrow(() -> new ResourceNotFoundException("Rule not found"));
+        Vendor v = vendorRepo.findById(vendorId).orElseThrow(() -> new ResourceNotFoundException("Vendor not found"));
+        DepreciationRule r = ruleRepo.findById(ruleId).orElseThrow(() -> new ResourceNotFoundException("Rule not found"));
+        if(asset.getPurchaseCost() <= 0) throw new IllegalArgumentException("Purchase cost must be > 0");
+        if(assetRepo.existsByAssetTag(asset.getAssetTag())) throw new IllegalArgumentException("Duplicate Tag");
         
-        if (asset.getPurchaseCost() <= 0) throw new IllegalArgumentException("Invalid cost");
-        if (assetRepo.existsByAssetTag(asset.getAssetTag())) throw new IllegalArgumentException("Duplicate tag");
-
-        asset.setVendor(vendor);
-        asset.setDepreciationRule(rule);
+        asset.setVendor(v);
+        asset.setDepreciationRule(r);
         return assetRepo.save(asset);
     }
 
-    @Override
     public List<Asset> getAllAssets() { return assetRepo.findAll(); }
-
-    @Override
-    public Asset getAsset(Long id) { 
-        return assetRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Asset not found")); 
-    }
-
-    @Override
+    public Asset getAsset(Long id) { return assetRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Not Found")); }
     public List<Asset> getAssetsByStatus(String status) { return assetRepo.findByStatus(status); }
 }

@@ -1,35 +1,25 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.entity.AssetLifecycleEvent;
-import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.entity.*;
 import com.example.demo.repository.*;
-import com.example.demo.service.AssetLifecycleEventService;
+import com.example.demo.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 
 @Service
-public class AssetLifecycleEventServiceImpl implements AssetLifecycleEventService {
+@RequiredArgsConstructor
+public class AssetLifecycleEventServiceImpl {
     private final AssetLifecycleEventRepository eventRepo;
     private final AssetRepository assetRepo;
 
-    public AssetLifecycleEventServiceImpl(AssetLifecycleEventRepository eventRepo, AssetRepository assetRepo) {
-        this.eventRepo = eventRepo;
-        this.assetRepo = assetRepo;
+    public AssetLifecycleEvent logEvent(Long assetId, AssetLifecycleEvent ev) {
+        Asset a = assetRepo.findById(assetId).orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
+        if(ev.getEventDescription() == null || ev.getEventDescription().isBlank()) throw new IllegalArgumentException("Desc required");
+        if(ev.getEventDate().isAfter(LocalDate.now())) throw new IllegalArgumentException("Future date");
+        ev.setAsset(a);
+        return eventRepo.save(ev);
     }
-
-    @Override
-    public AssetLifecycleEvent logEvent(Long assetId, AssetLifecycleEvent event) {
-        var asset = assetRepo.findById(assetId).orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
-        if (event.getEventDescription() == null || event.getEventDescription().isBlank()) throw new IllegalArgumentException("Desc required");
-        if (event.getEventDate().isAfter(LocalDate.now())) throw new IllegalArgumentException("Future date invalid");
-
-        event.setAsset(asset);
-        return eventRepo.save(event);
-    }
-
-    @Override
-    public List<AssetLifecycleEvent> getEvents(Long assetId) {
-        return eventRepo.findByAssetIdOrderByEventDateDesc(assetId);
-    }
+    public List<AssetLifecycleEvent> getEvents(Long assetId) { return eventRepo.findByAssetIdOrderByEventDateDesc(assetId); }
 }

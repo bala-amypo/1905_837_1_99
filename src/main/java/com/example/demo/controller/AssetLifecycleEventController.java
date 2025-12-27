@@ -1,20 +1,19 @@
 package com.example.demo.controller;
 import com.example.demo.entity.AssetLifecycleEvent;
 import com.example.demo.service.impl.AssetLifecycleEventServiceImpl;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/events")
+@RequiredArgsConstructor
 public class AssetLifecycleEventController {
     private final AssetLifecycleEventServiceImpl service;
-    public AssetLifecycleEventController(AssetLifecycleEventServiceImpl service) { this.service = service; }
-
     @PostMapping("/{assetId}")
-    public ResponseEntity<AssetLifecycleEvent> create(@PathVariable Long assetId, @RequestBody AssetLifecycleEvent event) {
-        return ResponseEntity.ok(service.logEvent(assetId, event));
+    public AssetLifecycleEvent create(@PathVariable Long assetId, @RequestBody AssetLifecycleEvent e) {
+        return service.logEvent(assetId, e);
     }
-
     @GetMapping("/asset/{assetId}")
-    public ResponseEntity<?> getByAsset(@PathVariable Long assetId) { return ResponseEntity.ok(service.getEvents(assetId)); }
+    public List<AssetLifecycleEvent> get(@PathVariable Long assetId) { return service.getEvents(assetId); }
 }

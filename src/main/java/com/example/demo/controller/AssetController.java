@@ -1,26 +1,27 @@
 package com.example.demo.controller;
+
 import com.example.demo.entity.Asset;
 import com.example.demo.service.impl.AssetServiceImpl;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/assets")
+@RequiredArgsConstructor
 public class AssetController {
     private final AssetServiceImpl service;
-    public AssetController(AssetServiceImpl service) { this.service = service; }
 
-    @PostMapping("/{vendorId}/{ruleId}")
-    public ResponseEntity<Asset> create(@PathVariable Long vendorId, @PathVariable Long ruleId, @RequestBody Asset asset) {
-        return ResponseEntity.ok(service.createAsset(vendorId, ruleId, asset));
+    @PostMapping("/{vid}/{rid}")
+    public Asset create(@PathVariable Long vid, @PathVariable Long rid, @RequestBody Asset a) {
+        return service.createAsset(vid, rid, a);
     }
-
     @GetMapping
-    public ResponseEntity<?> getAll() { return ResponseEntity.ok(service.getAllAssets()); }
-
+    public List<Asset> getAll() { return service.getAllAssets(); }
+    
     @GetMapping("/{id}")
-    public ResponseEntity<?> getById(@PathVariable Long id) { return ResponseEntity.ok(service.getAsset(id)); }
-
+    public Asset get(@PathVariable Long id) { return service.getAsset(id); }
+    
     @GetMapping("/status/{status}")
-    public ResponseEntity<?> getByStatus(@PathVariable String status) { return ResponseEntity.ok(service.getAssetsByStatus(status)); }
+    public List<Asset> getByStatus(@PathVariable String status) { return service.getAssetsByStatus(status); }
 }
