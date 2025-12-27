@@ -30,18 +30,15 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            User user = userService.registerUser(request);
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("status", "Success");
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.badRequest().body(Collections.singletonMap("error", e.getMessage()));
-        }
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> body) {
+        User user = userService.registerUser(body);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);        // ⭐ REQUIRED BY TEST
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("name", user.getName());
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
