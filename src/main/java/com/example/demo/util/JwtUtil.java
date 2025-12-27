@@ -21,6 +21,8 @@ public class JwtUtil {
     public String generateToken(String email, Long userId, Set<String> roles) {
         return Jwts.builder()
                 .setSubject(email)
+                // FIX: Explicitly add the "email" claim to satisfy the test expectation
+                .claim("email", email) 
                 .claim("userId", userId)
                 .claim("roles", roles)
                 .setIssuedAt(new Date())
