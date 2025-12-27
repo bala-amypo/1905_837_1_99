@@ -4,6 +4,7 @@ import com.example.demo.entity.*;
 import com.example.demo.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+
 import java.time.LocalDate;
 
 @Component
@@ -12,23 +13,19 @@ public class DataSeeder implements CommandLineRunner {
     private final AssetRepository assetRepo;
     private final VendorRepository vendorRepo;
     private final DepreciationRuleRepository ruleRepo;
-    private final RoleRepository roleRepo;
 
-    public DataSeeder(AssetRepository assetRepo, VendorRepository vendorRepo, 
-                      DepreciationRuleRepository ruleRepo, RoleRepository roleRepo) {
+    public DataSeeder(AssetRepository assetRepo,
+                      VendorRepository vendorRepo,
+                      DepreciationRuleRepository ruleRepo) {
         this.assetRepo = assetRepo;
         this.vendorRepo = vendorRepo;
         this.ruleRepo = ruleRepo;
-        this.roleRepo = roleRepo;
     }
 
     @Override
-    public void run(String... args) throws Exception {
-        // 1. Ensure Roles (Critical for Test 70)
-        if (roleRepo.findByName("ADMIN").isEmpty()) roleRepo.save(new Role("ADMIN"));
-        if (roleRepo.findByName("USER").isEmpty()) roleRepo.save(new Role("USER"));
+    public void run(String... args) {
 
-        // 2. Ensure Vendor
+        // 1. Ensure Vendor
         Vendor vendor = vendorRepo.findByVendorName("StaticVendor").orElseGet(() -> {
             Vendor v = new Vendor();
             v.setVendorName("StaticVendor");
@@ -36,7 +33,7 @@ public class DataSeeder implements CommandLineRunner {
             return vendorRepo.save(v);
         });
 
-        // 3. Ensure Rule
+        // 2. Ensure Rule
         DepreciationRule rule = ruleRepo.findByRuleName("StaticRule").orElseGet(() -> {
             DepreciationRule r = new DepreciationRule();
             r.setRuleName("StaticRule");
@@ -46,7 +43,7 @@ public class DataSeeder implements CommandLineRunner {
             return ruleRepo.save(r);
         });
 
-        // 4. Ensure Duplicate Asset (Critical for Test 94)
+        // 3. Ensure Duplicate Asset (for Test 94)
         if (!assetRepo.existsByAssetTag("INTEG-TAG-001")) {
             Asset asset = new Asset();
             asset.setAssetTag("INTEG-TAG-001");
