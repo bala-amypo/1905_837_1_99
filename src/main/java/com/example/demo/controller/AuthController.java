@@ -29,42 +29,39 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         try {
+            // Register User
             User user = userService.registerUser(body);
 
-            // Construct safe response
+            // Manual Map Construction (Prevents Serialization Errors)
             Map<String, Object> response = new HashMap<>();
             response.put("id", user.getId());
             response.put("email", user.getEmail());
             response.put("name", user.getName());
-            response.put("status", "success");
+            response.put("message", "User registered successfully");
             
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            // Log for debugging
-            System.out.println("REGISTRATION FAILED: " + e.getMessage());
-            Map<String, Object> errorResp = new HashMap<>();
-            errorResp.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResp);
+            // Log the error specifically for debugging
+            System.err.println("REGISTRATION FAILED: " + e.getMessage());
+            e.printStackTrace();
+            // Return 500 with error message in body
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
         }
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest req) {
-        try {
-            Authentication authentication = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
-            
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+        Authentication authentication = authManager.authenticate(
+                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
+        
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
-            Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
-            String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
-            
-            return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
-        }
+        User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
+        Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
+        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
+        
+        return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
     }
 }
