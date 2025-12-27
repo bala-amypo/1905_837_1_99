@@ -1,39 +1,55 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.*;
+import com.example.demo.dto.AuthRequest;
+import com.example.demo.dto.AuthResponse;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.UserService; // Ensure correct import
-import com.example.demo.service.impl.UserServiceImpl; // Or Use Impl directly
+import com.example.demo.service.UserService;
 import com.example.demo.util.JwtUtil;
+
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication; // ✅ CORRECT IMPORT
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-import java.util.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-    private final AuthenticationManager authManager;
-    private final JwtUtil jwtUtil;
-    private final UserServiceImpl userService;
-    private final UserRepository userRepo;
 
-    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil, UserServiceImpl userService, UserRepository userRepo) {
-        this.authManager = authManager;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
+    private final UserService userService;
+    private final UserRepository userRepository;
+
+    public AuthController(
+            AuthenticationManager authenticationManager,
+            JwtUtil jwtUtil,
+            UserService userService,
+            UserRepository userRepository
+    ) {
+        this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
-        this.userRepo = userRepo;
+        this.userRepository = userRepository;
     }
 
+    // ---------------- REGISTER ----------------
+
     @PostMapping("/register")
-    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> register(
+            @RequestBody Map<String, String> body
+    ) {
         User user = userService.registerUser(body);
+
         Map<String, Object> response = new HashMap<>();
-        response.put("success", true);        // ⭐ REQUIRED BY TEST
+        response.put("success", true);   // ⭐ REQUIRED BY test70
         response.put("id", user.getId());
         response.put("email", user.getEmail());
         response.put("name", user.getName());
@@ -41,29 +57,42 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest req) {
-        try {
-            // 1. Authenticate (Triggers User.toString() internally in logs)
-            Authentication authentication = authManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
-            
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+    // ---------------- LOGIN ----------------
 
-            // 2. Fetch User Details safely
-            User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
-            Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
-            
-            // 3. Generate Token
-            String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
-            
-            return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
-        } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
-        } catch (Exception e) {
-            // If it crashes, print WHY.
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Collections.singletonMap("error", "Login Error: " + e.getMessage()));
-        }
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> login(
+            @RequestBody AuthRequest request
+    ) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        request.getEmail(),
+                        request.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        Set<String> roles = user.getRoles()
+                .stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toSet());
+
+        String token = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getId(),
+                roles
+        );
+
+        return ResponseEntity.ok(
+                new AuthResponse(
+                        token,
+                        user.getId(),
+                        user.getEmail(),
+                        roles
+                )
+        );
     }
 }
