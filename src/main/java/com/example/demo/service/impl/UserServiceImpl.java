@@ -1,26 +1,23 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.dto.RegisterRequest;
-import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
-import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+
 @Service
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final PasswordEncoder encoder;
 
     public UserServiceImpl(UserRepository userRepository,
-                           RoleRepository roleRepository,
                            PasswordEncoder encoder) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
         this.encoder = encoder;
     }
 
@@ -40,15 +37,9 @@ public class UserServiceImpl implements UserService {
         user.setEmail(req.getEmail());
         user.setPassword(encoder.encode(req.getPassword()));
 
-        // ✅ FIX: ROLE MUST BE PREFIXED WITH ROLE_
-        String roleName = (req.getRole() != null && !req.getRole().isBlank())
-                ? "ROLE_" + req.getRole().toUpperCase()
-                : "ROLE_USER";
-
-        Role role = roleRepository.findByName(roleName)
-                .orElseGet(() -> roleRepository.save(new Role(roleName)));
-
-        user.getRoles().add(role);
+        // 🚫 NO ROLE SAVED TO DB
+        // Just keep roles EMPTY or null-safe
+        user.setRoles(Collections.emptySet());
 
         return userRepository.save(user);
     }
