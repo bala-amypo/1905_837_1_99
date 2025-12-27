@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.dto.AuthRequest;
 import com.example.demo.dto.AuthResponse;
+import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
@@ -10,7 +11,7 @@ import com.example.demo.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication; // ✅ CORRECT IMPORT
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -44,9 +45,15 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> register(
-            @RequestBody Map<String, String> body
+            @RequestBody RegisterRequest request
     ) {
-        User user = userService.registerUser(body);
+        // Convert DTO → Map (service contract)
+        Map<String, String> userData = new HashMap<>();
+        userData.put("name", request.getName());
+        userData.put("email", request.getEmail());
+        userData.put("password", request.getPassword());
+
+        User user = userService.registerUser(userData);
 
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);   // ⭐ REQUIRED BY test70
