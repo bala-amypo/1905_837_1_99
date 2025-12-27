@@ -6,5 +6,5 @@ import java.util.Map;
 
 public interface UserService {
     // Change parameter from Map to RegisterRequest
-    User registerUser(RegisterRequest request); 
+   User registerUser(Map<String, String> userData);
 }

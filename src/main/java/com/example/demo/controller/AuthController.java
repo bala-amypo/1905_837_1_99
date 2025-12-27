@@ -3,7 +3,8 @@ package com.example.demo.controller;
 import com.example.demo.dto.*;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.service.UserService;
+import com.example.demo.service.UserService; // Ensure correct import
+import com.example.demo.service.impl.UserServiceImpl; // Or Use Impl directly
 import com.example.demo.util.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
@@ -18,10 +19,10 @@ import java.util.stream.Collectors;
 public class AuthController {
     private final AuthenticationManager authManager;
     private final JwtUtil jwtUtil;
-    private final UserService userService;
+    private final UserServiceImpl userService;
     private final UserRepository userRepo;
 
-    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil, UserService userService, UserRepository userRepo) {
+    public AuthController(AuthenticationManager authManager, JwtUtil jwtUtil, UserServiceImpl userService, UserRepository userRepo) {
         this.authManager = authManager;
         this.jwtUtil = jwtUtil;
         this.userService = userService;
@@ -29,39 +30,40 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
-        try {
-            // Register User
-            User user = userService.registerUser(body);
+    public ResponseEntity<Map<String, Object>> register(@RequestBody Map<String, String> body) {
+        User user = userService.registerUser(body);
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);        // ⭐ REQUIRED BY TEST
+        response.put("id", user.getId());
+        response.put("email", user.getEmail());
+        response.put("name", user.getName());
 
-            // Manual Map Construction (Prevents Serialization Errors)
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", user.getId());
-            response.put("email", user.getEmail());
-            response.put("name", user.getName());
-            response.put("message", "User registered successfully");
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            // Log the error specifically for debugging
-            System.err.println("REGISTRATION FAILED: " + e.getMessage());
-            e.printStackTrace();
-            // Return 500 with error message in body
-            return ResponseEntity.internalServerError().body(Collections.singletonMap("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest req) {
-        Authentication authentication = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
-        
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            // 1. Authenticate (Triggers User.toString() internally in logs)
+            Authentication authentication = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
+            
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
-        Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
-        String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
-        
-        return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
+            // 2. Fetch User Details safely
+            User user = userRepo.findByEmail(req.getEmail()).orElseThrow();
+            Set<String> roles = user.getRoles().stream().map(r -> r.getName()).collect(Collectors.toSet());
+            
+            // 3. Generate Token
+            String token = jwtUtil.generateToken(user.getEmail(), user.getId(), roles);
+            
+            return ResponseEntity.ok(new AuthResponse(token, user.getId(), user.getEmail(), roles));
+        } catch (BadCredentialsException e) {
+            return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
+        } catch (Exception e) {
+            // If it crashes, print WHY.
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Collections.singletonMap("error", "Login Error: " + e.getMessage()));
+        }
     }
 }
