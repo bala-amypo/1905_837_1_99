@@ -1,48 +1,45 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.dto.RegisterRequest;
 import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import java.util.HashSet;
+import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder encoder;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder encoder) {
-        this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.encoder = encoder;
+    @Override
+    public User registerUser(User user) {
+        if(userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already exists");
+        }
+        
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            Set<Role> roles = new HashSet<>();
+            Role userRole = roleRepository.findByName("USER")
+                    .orElseThrow(() -> new RuntimeException("Default role not found"));
+            roles.add(userRole);
+            user.setRoles(roles);
+        }
+        
+        return userRepository.save(user);
     }
 
     @Override
-    @Transactional
-    public User registerUser(RegisterRequest request) {
-        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email is required");
-        }
-        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("Email already exists");
-        }
-
-        User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(encoder.encode(request.getPassword()));
-        
-        // Robust Role Logic
-        Role userRole = roleRepository.findByName("USER")
-                .orElseGet(() -> roleRepository.saveAndFlush(new Role("USER")));
-        
-        user.getRoles().add(userRole);
-        
-        return userRepository.saveAndFlush(user);
+    public User findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

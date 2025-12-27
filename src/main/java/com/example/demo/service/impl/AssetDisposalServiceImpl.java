@@ -1,35 +1,55 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.entity.*;
-import com.example.demo.repository.*;
+import com.example.demo.entity.Asset;
+import com.example.demo.entity.AssetDisposal;
+import com.example.demo.entity.User;
 import com.example.demo.exception.ResourceNotFoundException;
+import com.example.demo.repository.AssetDisposalRepository;
+import com.example.demo.repository.AssetRepository;
+import com.example.demo.repository.UserRepository;
+import com.example.demo.service.AssetDisposalService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AssetDisposalServiceImpl {
-    private final AssetDisposalRepository disposalRepo;
-    private final AssetRepository assetRepo;
-    private final UserRepository userRepo;
+public class AssetDisposalServiceImpl implements AssetDisposalService {
+    private final AssetDisposalRepository disposalRepository;
+    private final AssetRepository assetRepository;
+    private final UserRepository userRepository;
 
-    public AssetDisposal requestDisposal(Long assetId, AssetDisposal d) {
-        Asset a = assetRepo.findById(assetId).orElseThrow(() -> new ResourceNotFoundException("Asset not found"));
-        d.setAsset(a);
-        return disposalRepo.save(d);
+    @Override
+    public AssetDisposal requestDisposal(Long assetId, AssetDisposal disposal) {
+        Asset asset = assetRepository.findById(assetId)
+                .orElseThrow(() -> new ResourceNotFoundException("Asset not found")); // [cite: 807]
+
+        if (disposal.getDisposalValue() < 0) {
+            throw new IllegalArgumentException("Disposal value must be >= 0"); // [cite: 808]
+        }
+
+        disposal.setAsset(asset);
+        return disposalRepository.save(disposal);
     }
 
+    @Override
     public AssetDisposal approveDisposal(Long disposalId, Long adminId) {
-        AssetDisposal d = disposalRepo.findById(disposalId).orElseThrow(() -> new ResourceNotFoundException("Disposal not found"));
-        User admin = userRepo.findById(adminId).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        AssetDisposal disposal = disposalRepository.findById(disposalId)
+                .orElseThrow(() -> new ResourceNotFoundException("Disposal not found")); // [cite: 811]
         
-        // Simple role check logic
-        boolean isAdmin = admin.getRoles().stream().anyMatch(r -> r.getName().equals("ADMIN"));
-        if(!isAdmin) throw new RuntimeException("Not Admin");
+        User admin = userRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found")); // [cite: 812]
 
-        d.setApprovedBy(admin);
-        d.getAsset().setStatus("DISPOSED");
-        assetRepo.save(d.getAsset());
-        return disposalRepo.save(d);
+        // Basic role check
+        boolean isAdmin = admin.getRoles().stream()
+                .anyMatch(r -> "ADMIN".equals(r.getName()));
+        if (!isAdmin) {
+            throw new RuntimeException("Not Admin"); // [cite: 812]
+        }
+
+        disposal.setApprovedBy(admin);
+        disposal.getAsset().setStatus("DISPOSED"); // [cite: 813]
+        assetRepository.save(disposal.getAsset()); // [cite: 813]
+        
+        return disposalRepository.save(disposal);
     }
 }

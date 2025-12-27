@@ -5,7 +5,7 @@ import java.util.List;
 
 public interface AssetService {
     Asset createAsset(Long vendorId, Long ruleId, Asset asset);
+    List<Asset> getAssetsByStatus(String status);
     List<Asset> getAllAssets();
     Asset getAsset(Long id);
-    List<Asset> getAssetsByStatus(String status);
 }
