@@ -29,22 +29,17 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
         try {
-            // 1. Create User
-            User user = userService.registerUser(body);
+            // 1. Call Service with DTO
+            User user = userService.registerUser(request);
 
-            // 2. Map to DTO (Prevents StackOverflow / JSON Errors)
-            Set<String> roleNames = user.getRoles().stream()
-                    .map(r -> r.getName())
-                    .collect(Collectors.toSet());
-
-            UserResponseDto response = new UserResponseDto(
-                    user.getId(),
-                    user.getName(),
-                    user.getEmail(),
-                    roleNames
-            );
+            // 2. Map to DTO/Map (Prevents StackOverflow / JSON Errors)
+            Map<String, Object> response = new LinkedHashMap<>();
+            response.put("id", user.getId());
+            response.put("email", user.getEmail());
+            response.put("name", user.getName());
+            response.put("status", "success");
             
             return ResponseEntity.ok(response);
 
