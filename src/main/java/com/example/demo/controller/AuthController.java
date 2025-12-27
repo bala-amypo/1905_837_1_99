@@ -37,7 +37,6 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest req) {
         try {
-            // 1. Authenticate (Triggers User.toString() internally in logs)
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
             
