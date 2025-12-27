@@ -24,15 +24,14 @@ public class AuthController {
 
     @PostMapping("/register")
     public Map<String, Object> register(@RequestBody RegisterRequest req) {
-        // The test expects a map containing the email to verify registration
         User u = new User();
         u.setEmail(req.getEmail());
         u.setPassword(req.getPassword());
-        u.setName(req.getEmail()); // Fallback name
+        u.setName(req.getEmail()); 
         
         userService.registerUser(u);
         
-        // Return simple map as expected by test70_registerEndpoint
+        // FIX: Return a Map so the test can read body.get("email") directly
         return Map.of(
             "email", u.getEmail(),
             "id", u.getId(),

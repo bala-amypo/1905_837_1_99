@@ -19,7 +19,7 @@ public class AssetLifecycleEventController {
 
     @GetMapping("/asset/{assetId}")
     public List<AssetLifecycleEvent> get(@PathVariable Long assetId) {
-        // Fixed: method name changed from getEvents() to getEventsForAsset()
+        // FIX: The method name in the service is 'getEventsForAsset'
         return service.getEventsForAsset(assetId);
     }
 }
