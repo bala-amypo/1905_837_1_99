@@ -31,7 +31,6 @@ public class AuthController {
         
         userService.registerUser(u);
         
-        // FIX: Return a Map so the test can read body.get("email") directly
         return Map.of(
             "email", u.getEmail(),
             "id", u.getId(),
